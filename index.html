@@ -1,113 +1,91 @@
-<!DOCTYPE HTML>
-<html>
-  <head>
-    <title>Node MapTest</title>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
-  <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.4/js/dojo/dijit/themes/claro/claro.css">
-    <style>
-      html, body { height: 100%; width: 100%; margin: 0; padding: 0; }
-      #map{padding:0;}
-    </style>
-    <script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.4"></script>
-    
-  </head>
-  <body class="claro">
-    <div id="map"></div>
-    <label for="nickname">Who are you?</nickname><input type="text" id="nickname"/>
-    <ul id="clients"></ul> 
+<!doctype html>
+<!--[if lt IE 7 ]><html class="ie ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]><html class="ie ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]><html class="ie ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--><html lang="en"> <!--<![endif]-->
+<head>
+
+	<!-- Basic Page Needs
+  ================================================== -->
+	<meta charset="utf-8" />
+	<title>Node Tracker</title>
+	<meta name="description" content="">
+	<meta name="author" content="">
+	<!--[if lt IE 9]>
+		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	
+	<!-- Mobile Specific Metas
+  ================================================== -->
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" /> 
+	
+	<!-- CSS
+  ================================================== -->
+	<link rel="stylesheet" href="stylesheets/base.css">
+	<link rel="stylesheet" href="stylesheets/skeleton.css">
+	<link rel="stylesheet" href="stylesheets/layout.css">
+	
+	<!-- Favicons
+	================================================== -->
+	<link rel="shortcut icon" href="images/favicon.ico">
+	<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png" />
+        <link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png" />
+        <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.4/js/dojo/dijit/themes/claro/claro.css">
+        <style>
+          html, body { height: 100%; width: 100%; margin: 0; padding: 0; }
+          #map{padding:0;}
+        </style>
+        <script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.4"></script>
+	
+</head>
+<body class="claro">
+
+
+	<!-- Primary Page Layout
+	================================================== -->
+	
+	<!-- Delete everything in this .container and get started on your own site! -->
+
+	<div class="container">	
+		<div class="sixteen columns">
+			<h1 class="remove-bottom" style="margin-top: 40px">Tracker</h1>
+			<h5>Version 0.1</h5>
+			<hr />
+                      </div>
+                <div id="map" class="sixteen columns"></div>
+		<div class="one-third column">
+			<h3>Who Are You?</h3>	
+                        <p>We need somethign to call you, so pick something short and sweet.</p>
+                        <input type="text" id="nickname"/>
+                        <div id="info"></div>
+		</div>
+		<div class="one-third column">
+			<h3>Who Else is Here?</h3>	
+			<p>Other persons mucking about...</p>
+			<ul id="clients" class="square">
+				
+			</ul>
+		</div>
+		<div class="one-third column">
+			<h3>Suggestion Box</h3>	
+                        <p>Have a suggestion? Well, you should do something with it.  </p>
+		</div>
+
+	</div><!-- container -->
+
+		
+		
+		
+		
+	<!-- JS
+	================================================== -->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.js"></script>
     <script src="/socket.io/socket.io.js" type="text/javascript" charset="utf-8"></script>
-    <script type="text/javascript" language="javascript" charset="utf-8">
-    //<![CDATA[
-    var socket = io.connect('http://192.168.0.6:8000'),
-    myLoc, myGraphic, myPos,
-    graphics={},
-    geo = esri.geometry,
-    sym = new esri.symbol.PictureMarkerSymbol('images/me.png', 25, 45),
-    otherSym= new esri.symbol.PictureMarkerSymbol('images/someone.png', 25, 45);
-    socket.on('message', function(data){
-        data = JSON.parse(data);
-        if (data.action === "position") {
-          var pt = geo.geographicToWebMercator(new geo.Point(data.lng, data.lat));
-          addLocToMap(pt, otherSym, {nickname:data.nickname});
-        }
-      console.dir(data);
-    });
-    socket.emit(JSON.stringify({
-      action: 'speak',
-      text: "connected" 
-      }));
-   function sendPosition() {
-      var coords = myPos.coords;
-      socket.send(JSON.stringify({
-          action: 'position',
-          nickname: $("#nickname").val(),
-          lat: coords.latitude,
-          lng: coords.longitude
-          }));
-    }
-    function sendLocation(position){
-      myPos = position; 
-      var coords = myPos.coords;
-
-      myLoc = geo.geographicToWebMercator(new geo.Point(coords.longitude, coords.latitude), sym);
-      if ($('#nickname').val() !== ''){
-        sendPosition();
-        if(map.loaded ) addLocToMap(myLoc, sym, {nickname:"Me"});
-      }
-    }
-    function getLocation(){
-      if (navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(sendLocation);
-      }
-    }
-function addLocToMap(loc, symbol, attr){
-  var newg, txtg, g, txtsym,
-      g = graphics[attr.nickname];
-  if (g) {
-    map.graphics.remove(g[0]);
-    map.graphics.remove(g[1]);
-  }
-  //Added two graphics per person, one for name 
-  // ArcGIS jsapi needs to handle this
-  newg = new esri.Graphic(loc,symbol, attr );
-  txtsym = new esri.symbol.TextSymbol(attr.nickname);
-  txtsym.yoffset = -15;
-  txtsym.color = '#F00';
-  txtg = new esri.Graphic(loc, txtsym);
-
-  graphics[attr.nickname] =[newg, txtg];
-      map.graphics.add(newg);
-      map.graphics.add(txtg);
-    }
-getLocation();
-var map;
-dojo.addOnLoad(function(){
-	 
-  var initExtent = new esri.geometry.Extent({"xmin":-15122738.766504481 ,"ymin":2519982.865068336,"xmax":-3342875.463422532,"ymax":6433558.7132683,"spatialReference":{"wkid":102100}});
-  map = new esri.Map("map",{extent:initExtent});
-  //Add the world street map layer to the map. View the ArcGIS Online site for services http://arcgisonline/home/search.html?t=content&f=typekeywords:service    
-  var basemap = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer");
-  map.addLayer(basemap);  
-  //resize the map when the browser resizes - view the 'Resizing and repositioning the map' section in 
-  //the following help topic for more details http://help.esri.com/EN/webapi/javascript/arcgis/help/jshelp_start.htm#jshelp/inside_guidelines.htm
-  var resizeTimer;
-  dojo.connect(map, 'onLoad', function(theMap) {
-    dojo.connect(dijit.byId('map'), 'resize', function() {  //resize the map if the div is resized
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout( function() {
-        map.resize();
-        map.reposition();
-      }, 500);
-    });
-  });
-
-  $("#nickname").bind("change", function(){
-    addLocToMap(myLoc, sym, {nickname:"Me"});
-    sendPosition();
-      });
-
- });
-    //]]>
-    </script>
-  </body>
+	<script>window.jQuery || document.write("<script src='javascripts/jquery-1.5.1.min.js'>\x3C/script>")</script>
+	<script src="javascripts/tracker.js"></script>
+	
+<!-- End Document
+================================================== -->
+</body>
 </html>
