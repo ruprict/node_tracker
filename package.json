@@ -3,8 +3,7 @@
   "version": "0.0.1",
   "dependencies": {
     "socket.io": "0.7.7",
-    "node-static": "0.5.7",
-    "http-digest": "https://github.com/thedjinn/node-http-digest.git"
+    "node-static": "0.5.7"
   }
 }
 

@@ -1,6 +1,6 @@
 var sys = require('sys'),
     static = require('node-static'),
-    http = require('http-digest'),
+    http = require('./http-digest'),
     crypto = require('crypto'),
     io = require('socket.io'),
     json = JSON.stringify,
@@ -11,7 +11,7 @@ var sys = require('sys'),
     clients={};
 
 
-server = http.createServer("horse", "eatsP00", function(request, response){
+server = http.createServer("horse", "eatsP00" , function(request, response){
   request.addListener('end', function(){
     clientFiles.serve(request, response);
   });
