@@ -55,6 +55,7 @@ socket.sockets.on('connection', function(client){
 
   });
   client.on('disconnect', function(){
+    log("client " + client.id + " disconnected");
     delete clients[client.id];
     client.broadcast.emit('message',json({'id': client.id, 'action': 'close'}));
   });

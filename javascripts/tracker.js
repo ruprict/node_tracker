@@ -7,7 +7,7 @@ var socket = io.connect('http://192.168.0.6:8000'),
     otherSym= new esym.PictureMarkerSymbol('images/someone.png', 13, 24);
 socket.on('message', function(data){
     data = JSON.parse(data);
-    if (data.action === "position") {
+    if (data.action === "position" && (data.nickname !== $("nickname").val())) {
       var pt = geo.geographicToWebMercator(new geo.Point(data.lng, data.lat));
       addLocToMap(pt, otherSym, {nickname:data.nickname});
     }
@@ -42,16 +42,23 @@ function getLocation(){
   }
 }
 function addLocToMap(loc, symbol, attr){
-  var newg, txtg, g, txtsym,txtbg, 
+  var newg, txtg, g, txtsym,
       g = graphics[attr.nickname];
   if (g) {
     map.graphics.remove(g[0]);
     map.graphics.remove(g[1]);
   } else {
-    $('<li>', {
-      id: "li_" + attr.nickname,
-      text: attr.nickname
-    }).appendTo($('#clients'));
+    var li = $('<li>', {
+      id: "li_" + attr.nickname
+    }),
+      a = $("<a>", {
+        href:"#",
+        id: "goto_" + attr.nickname,
+        text: attr.nickname
+      });
+    li.appendTo($('#clients'));
+    
+    a.appendTo(li);
   }
   //Added three graphics per person, one for name, one for name background.
   // ArcGIS jsapi needs to handle this
@@ -61,15 +68,9 @@ function addLocToMap(loc, symbol, attr){
   txtsym.color = '#F00';
   txtsym.setFont(new esym.Font("18px", esym.Font.STYLE_NORMAL, esym.Font.VARIANT_NORMAL, esym.WEIGHT_LIGHTER, "Arial"));
   txtg = new esri.Graphic(loc, txtsym);
-  txtbg = new esym.TextSymbol(attr.nickname);
-  txtbg.yoffset = -25;
-  txtbg.color = '#F00';
-  txtbg.setFont(new esym.Font("18px", esym.Font.STYLE_NORMAL, esym.Font.VARIANT_NORMAL, esym.WEIGHT_BOLDER, "Arial"));
-  txtbg.color="#FFF";
   txtg = new esri.Graphic(loc, txtsym);
   graphics[attr.nickname] =[newg, txtg];
     map.graphics.add(newg);
-    map.graphics.add(new esri.Graphic(loc, txtbg));
     map.graphics.add(txtg);
 }
 getLocation();
@@ -105,9 +106,21 @@ dojo.addOnLoad(function(){
   });
 
 $("#nickname").bind("change", function(){
-addLocToMap(myLoc, sym, {nickname:"Me"});
-sendPosition();
-  });
+  addLocToMap(myLoc, sym, {nickname:"Me"});
+  sendPosition();
+});
 
+$("#clients").click(function(e){
+  var $this = $(this), nick
+    target = e.target;
+  if (!$(target).is("a")) return false;
+  nick = target.id.split("_")[1];
+  $.each(map.graphics.graphics, function(idx, gr){
+    if (gr.attributes && gr.attributes.nickname === nick){
+      map.centerAndZoom(gr.geometry, 16);
+    }
+  });
+   
+});
 });
 
