@@ -1,4 +1,4 @@
-var socket = io.connect('http://192.168.0.6:8000'),
+var socket = io.connect(),
     myLoc, myGraphic, myPos,
     graphics={},
     geo = esri.geometry,

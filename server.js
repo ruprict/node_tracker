@@ -1,6 +1,6 @@
 var sys = require('sys'),
     static = require('node-static'),
-    http = require('http'),
+    http = require('http-digest'),
     crypto = require('crypto'),
     io = require('socket.io'),
     json = JSON.stringify,
@@ -11,13 +11,13 @@ var sys = require('sys'),
     clients={};
 
 
-server = http.createServer(function(request, response){
+server = http.createServer("horse", "eatsP00", function(request, response){
   request.addListener('end', function(){
     clientFiles.serve(request, response);
   });
 });
 
-server.listen(8000);
+server.listen(process.env.PORT || 8000);
 socket = io.listen(server);
 
 socket.sockets.on('connection', function(client){
