@@ -22,18 +22,16 @@ socket = io.listen(server);
 
 socket.sockets.on('connection', function(client){
   con.log("Connection made...");
-  log('log');
-  console.dir(clients);
   client.on('message', function(message) {
 
     con.log("message recieved: " + JSON.stringify(message));
-   // try {
+    try {
       request = JSON.parse(message.replace('<', '&lt;').replace('>', '&gt;'));
-    //} catch (SyntaxError) {
+    } catch (SyntaxError) {
       log('Invalid JSON');
       log(message);
-     // return false;
-    //}
+      return false;
+    }
 
     /*if (request.action != 'close' && request.action != 'move' && request.action != 'speak') {
       log('Invalid request: ' + message);
