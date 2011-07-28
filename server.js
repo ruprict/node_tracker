@@ -1,21 +1,38 @@
 var sys = require('sys'),
     static = require('node-static'),
-    http = require('./http-digest'),
     crypto = require('crypto'),
+    express = require('express'),
     io = require('socket.io'),
+    auth = require('connect-auth'),
     json = JSON.stringify,
     log = sys.puts,
+    connect = require('connect'),
     clientFiles = new static.Server(),
     server, socket,
     con = console,
     clients={};
 
 
-server = http.createServer("horse", "eatsP00" , function(request, response){
-  request.addListener('end', function(){
-    clientFiles.serve(request, response);
-  });
-});
+function basic_auth(req,res, next) {
+  if (req.headers.authorization && req.headers.authorization.search('Basic ') === 0){
+    //fetch login and password
+    if (new Buffer(req.headers.authorization.split(' ')[1], 'base64').toString() === 'horse:eatsP00') {
+      next();
+      return;
+    }
+  }
+  console.log("Unable to authenticate user");
+  console.log(req.headers.authorization);
+  res.header('WWW-Authenticate', 'Basic realm="Node Tracker"');
+  res.send("Authentication required", 401);
+}
+
+
+server = express.createServer(
+    connect.logger(),
+    basic_auth,
+  connect.static(__dirname)
+);
 
 server.listen(process.env.PORT || 8000);
 socket = io.listen(server);

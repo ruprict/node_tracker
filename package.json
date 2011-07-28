@@ -3,7 +3,9 @@
   "version": "0.0.1",
   "dependencies": {
     "socket.io": "0.7.7",
-    "node-static": "0.5.7"
+    "node-static": "0.5.7",
+    "express": "2.4.3",
+    "connect": "1.6.0"
   }
 }
 
