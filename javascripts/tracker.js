@@ -9,10 +9,10 @@ socket.on('message', function(data){
     data = JSON.parse(data);
     if (data.action === "position" && (data.nickname !== $("nickname").val())) {
       var pt = geo.geographicToWebMercator(new geo.Point(data.lng, data.lat));
-      addLocToMap(pt, otherSym, {nickname:data.nickname});
+      addLocToMap(pt, otherSym, {id: data.id, nickname:data.nickname});
     }
     if (data.action === "close"){
-      removeNick(data.nickname);
+      removeUser(data.id);
     }
   console.dir(data);
 });
@@ -36,7 +36,7 @@ function sendLocation(position){
   myLoc = geo.geographicToWebMercator(new geo.Point(coords.longitude, coords.latitude), sym);
   if ($('#nickname').val() !== ''){
     sendPosition();
-    if(map.loaded ) addLocToMap(myLoc, sym, {nickname:"Me"});
+    if(map.loaded ) addLocToMap(myLoc, sym, {id: "me", nickname:"Me"});
   }
 }
 function getLocation(){
@@ -44,27 +44,28 @@ function getLocation(){
     navigator.geolocation.watchPosition(sendLocation);
   }
 }
-function removeNick(nickname) {
-  var g = graphics[nickname];
+function removeUser(id) {
+  var g = graphics[id];
   if (g) {
     map.graphics.remove(g[0]);
     map.graphics.remove(g[1]);
-    $('#li_' + nickname).remove();
+    $('#li_' + id).remove();
   }
 }
 function addLocToMap(loc, symbol, attr){
   var newg, txtg, g, txtsym,
-      g = graphics[attr.nickname];
+      g = graphics[attr.id];
   if (g) {
     map.graphics.remove(g[0]);
     map.graphics.remove(g[1]);
+    $('#goto_' + attr.id).text(attr.nickname);
   } else {
     var li = $('<li>', {
-      id: "li_" + attr.nickname
+      id: "li_" + attr.id
     }),
       a = $("<a>", {
         href:"#",
-        id: "goto_" + attr.nickname,
+        id: "goto_" + attr.id,
         text: attr.nickname
       });
     li.appendTo($('#clients'));
@@ -80,7 +81,7 @@ function addLocToMap(loc, symbol, attr){
   txtsym.setFont(new esym.Font("18px", esym.Font.STYLE_NORMAL, esym.Font.VARIANT_NORMAL, esym.WEIGHT_LIGHTER, "Arial"));
   txtg = new esri.Graphic(loc, txtsym);
   txtg = new esri.Graphic(loc, txtsym);
-  graphics[attr.nickname] =[newg, txtg];
+  graphics[attr.id] =[newg, txtg];
     map.graphics.add(newg);
     map.graphics.add(txtg);
 }
@@ -117,7 +118,7 @@ dojo.addOnLoad(function(){
   });
 
 $("#nickname").bind("change", function(){
-  addLocToMap(myLoc, sym, {nickname:"Me"});
+  addLocToMap(myLoc, sym, {id:"me", nickname:"Me"});
   sendPosition();
 });
 
@@ -127,7 +128,7 @@ $("#clients").click(function(e){
   if (!$(target).is("a")) return false;
   nick = target.id.split("_")[1];
   $.each(map.graphics.graphics, function(idx, gr){
-    if (gr.attributes && gr.attributes.nickname === nick){
+    if (gr.attributes && gr.attributes.id === nick){
       map.centerAndZoom(gr.geometry, 16);
     }
   });

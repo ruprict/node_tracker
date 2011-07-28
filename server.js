@@ -55,17 +55,19 @@ ws.sockets.on('connection', function(client){
     }*/
   if (clients[client.id] === undefined){  
   //Send existing clients
+  console.log("clients");
+  console.dir(clients);
     for (var sess in clients){
       log('sess = ' + sess);
       if (sess === client.id) continue;
       console.dir(clients[sess]);
       log('Sending ' + clients[sess]["nickname"]);
-      client.send(clients[sess]);
+      doSend(client,clients[sess], false);
     }
   }
     request.id = client.id;
     clients[client.id] = json(request);
-    client.broadcast.send(json(request));
+    doSend(client, json(request), true);
 
   });
   client.on('disconnect', function(){
@@ -73,10 +75,24 @@ ws.sockets.on('connection', function(client){
     var nick = JSON.parse(clients[client.id])['nickname'];
     console.dir(clients[client.id]);
     log("client " + nick + " disconnected");
-    client.broadcast.emit('message',json({'id': client.id, 'action': 'close', 'nickname': nick}));
+    //client.broadcast.emit('message',json({'id': client.id, 'action': 'close', 'nickname': nick}));
+    doSend(client,json({'id': client.id, 'action': 'close', 'nickname': nick}), true);
+
     delete clients[client.id];
   });
   con.log("Leaving connection code");
 
 });
+function doSend(client, message, broadcast){
+  try {
+    if (broadcast) {
+      client.broadcast.send(message);
+    } else {
+      client.send(message);
+    }
+  } catch (e) {
+    console.log("*** ERROR ***");
+    console.dir(e);
+  }
 
+}
