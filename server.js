@@ -55,9 +55,12 @@ socket.sockets.on('connection', function(client){
 
   });
   client.on('disconnect', function(){
-    log("client " + client.id + " disconnected");
+    if (clients[client.id] === undefined) return;
+    var nick = JSON.parse(clients[client.id])['nickname'];
+    console.dir(clients[client.id]);
+    log("client " + nick + " disconnected");
+    client.broadcast.emit('message',json({'id': client.id, 'action': 'close', 'nickname': nick}));
     delete clients[client.id];
-    client.broadcast.emit('message',json({'id': client.id, 'action': 'close'}));
   });
   
 

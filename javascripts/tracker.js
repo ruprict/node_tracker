@@ -11,6 +11,9 @@ socket.on('message', function(data){
       var pt = geo.geographicToWebMercator(new geo.Point(data.lng, data.lat));
       addLocToMap(pt, otherSym, {nickname:data.nickname});
     }
+    if (data.action === "close"){
+      removeNick(data.nickname);
+    }
   console.dir(data);
 });
 socket.emit(JSON.stringify({
@@ -38,7 +41,15 @@ function sendLocation(position){
 }
 function getLocation(){
   if (navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(sendLocation);
+    navigator.geolocation.watchPosition(sendLocation);
+  }
+}
+function removeNick(nickname) {
+  var g = graphics[nickname];
+  if (g) {
+    map.graphics.remove(g[0]);
+    map.graphics.remove(g[1]);
+    $('#li_' + nickname).remove();
   }
 }
 function addLocToMap(loc, symbol, attr){
