@@ -7,7 +7,7 @@ var sys = require('sys'),
     log = sys.puts,
     connect = require('connect'),
     clientFiles = new static.Server(),
-    server, socket,
+    server, ws,
     con = console,
     clients={};
 
@@ -34,9 +34,9 @@ server = express.createServer(
 );
 
 server.listen(process.env.PORT || 8000);
-socket = io.listen(server);
+ws = io.listen(server);
 
-socket.sockets.on('connection', function(client){
+ws.sockets.on('connection', function(client){
   con.log("Connection made...");
   client.on('message', function(message) {
 
@@ -76,7 +76,7 @@ socket.sockets.on('connection', function(client){
     client.broadcast.emit('message',json({'id': client.id, 'action': 'close', 'nickname': nick}));
     delete clients[client.id];
   });
-  
+  con.log("Leaving connection code");
 
 });
 
