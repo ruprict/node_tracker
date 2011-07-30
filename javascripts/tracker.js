@@ -75,11 +75,10 @@ function addLocToMap(loc, symbol, attr){
   //Added three graphics per person, one for name, one for name background.
   // ArcGIS jsapi needs to handle this
   newg = new esri.Graphic(loc,symbol, attr );
-  txtsym = new esym.TextSymbol(attr.nickname);
+  txtsym = new esym.TextSymbol( attr.nickname );
   txtsym.yoffset = -25;
   txtsym.color = '#F00';
   txtsym.setFont(new esym.Font("18px", esym.Font.STYLE_NORMAL, esym.Font.VARIANT_NORMAL, esym.WEIGHT_LIGHTER, "Arial"));
-  txtg = new esri.Graphic(loc, txtsym);
   txtg = new esri.Graphic(loc, txtsym);
   graphics[attr.id] =[newg, txtg];
     map.graphics.add(newg);

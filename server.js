@@ -55,7 +55,7 @@ ws.sockets.on('connection', function(client){
     }*/
   if (clients[client.id] === undefined){  
   //Send existing clients
-  console.log("clients");
+  console.log("New client, sending clients");
   console.dir(clients);
     for (var sess in clients){
       log('sess = ' + sess);
@@ -64,6 +64,8 @@ ws.sockets.on('connection', function(client){
       log('Sending ' + clients[sess]["nickname"]);
       doSend(client,clients[sess], false);
     }
+  } else {
+    console.log("*** Existing client, this is just a move");
   }
     request.id = client.id;
     clients[client.id] = json(request);
