@@ -5,11 +5,12 @@ var sys = require('sys'),
     io = require('socket.io'),
     json = JSON.stringify,
     log = sys.puts,
+    clientManager = require('clientManager'),
+    clientModel = require('client'),
     connect = require('connect'),
+    _u = require('underscore'),
     clientFiles = new static.Server(),
-    server, ws,
-    con = console,
-    clients={};
+    server;
 
 
 function basic_auth(req,res, next) {
@@ -17,6 +18,7 @@ function basic_auth(req,res, next) {
     //fetch login and password
     if (new Buffer(req.headers.authorization.split(' ')[1], 'base64').toString() === 'horse:eatsP00') {
       next();
+      log(req.session);
       return;
     }
   }
@@ -29,62 +31,65 @@ function basic_auth(req,res, next) {
 
 server = express.createServer(
     connect.logger(),
-    basic_auth,
+    //basic_auth,
+    express.cookieParser(),
+    express.session({secret:"horseFart"}),
   connect.static(__dirname)
 );
+
+server.get('/clients', function(req,res){
+  var json = {clients: []}; 
+  _u.each(clientManager.getClients(), function(cli) {
+    json.clients.push(JSON.parse(cli.toJson()));
+  });
+  res.send(JSON.stringify(json));
+});
+
 
 server.listen(process.env.PORT || 8000);
 ws = io.listen(server);
 
 ws.sockets.on('connection', function(client){
-  con.log("Connection made...");
+  var c_id = client.id,
+      currClient = new clientModel.Client(c_id);
+  clientManager.addClient(currClient);
+  console.log("Connection made...");
   client.on('message', function(message) {
-
-    con.log("message recieved: " + JSON.stringify(message));
-    try {
-      request = JSON.parse(message.replace('<', '&lt;').replace('>', '&gt;'));
-    } catch (SyntaxError) {
-      log('Invalid JSON');
-      log(message);
-      return false;
+    if (!currClient.sentClients){
+      sendExistingClients(client);
+      currClient.sentClients = true;
     }
-
-    /*if (request.action != 'close' && request.action != 'move' && request.action != 'speak') {
-      log('Invalid request: ' + message);
-      return false;
-    }*/
-  if (clients[client.id] === undefined){  
-  //Send existing clients
-  console.log("New client, sending clients");
-  console.dir(clients);
-    for (var sess in clients){
-      log('sess = ' + sess);
-      if (sess === client.id) continue;
-      console.dir(clients[sess]);
-      log('Sending ' + clients[sess]["nickname"]);
-      doSend(client,clients[sess], false);
-    }
-  } else {
-    console.log("*** Existing client, this is just a move");
-  }
-    request.id = client.id;
-    clients[client.id] = json(request);
-    doSend(client, json(request), true);
-
+    log ("* message from " + c_id);
+    log("* message = " + message);
+    var request = JSON.parse(message.replace('<', '&lt;').replace('>', '&gt;'));
+    currClient.update(request);
+    doSend(client, currClient.toJson(), true);
   });
   client.on('disconnect', function(){
-    if (clients[client.id] === undefined) return;
-    var nick = JSON.parse(clients[client.id])['nickname'];
-    console.dir(clients[client.id]);
+    console.log("disconnecting");
+    clientManager.removeClientById(c_id);
+    var nick = JSON.parse(currClient.toJson())['nickname'];
     log("client " + nick + " disconnected");
-    //client.broadcast.emit('message',json({'id': client.id, 'action': 'close', 'nickname': nick}));
-    doSend(client,json({'id': client.id, 'action': 'close', 'nickname': nick}), true);
+    doSend(client,json({'id': c_id, 'action': 'close', 'nickname': nick}), true);
 
-    delete clients[client.id];
   });
-  con.log("Leaving connection code");
+  log("Leaving connection code");
 
 });
+function sendExistingClients(client) {
+ console.log("New client, sending clients");
+  var clis = clientManager.getClients();
+  cli = 0;
+  console.log("*** Current number of clients connected is " + clis.length);
+  _u.each(clis, function(oldCli){
+    if (oldCli.getId() !== client.id) {
+      log('Sending ' + oldCli.getId());
+      console.dir(oldCli);
+      doSend(client,oldCli.toJson(), false);
+    } else log('same id **');
+  });
+};
+
 function doSend(client, message, broadcast){
   try {
     if (broadcast) {

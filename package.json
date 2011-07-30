@@ -5,7 +5,8 @@
     "socket.io": "0.7.7",
     "node-static": "0.5.7",
     "express": "2.4.3",
-    "connect": "1.6.0"
+    "connect": "1.6.0",
+    "underscore": "1.1.7"
   }
 }
 

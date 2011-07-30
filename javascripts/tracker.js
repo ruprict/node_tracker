@@ -8,7 +8,7 @@ var socket = io.connect(),
 socket.on('message', function(data){
     data = JSON.parse(data);
     if (data.action === "position" && (data.nickname !== $("nickname").val())) {
-      var pt = geo.geographicToWebMercator(new geo.Point(data.lng, data.lat));
+      var pt = geo.geographicToWebMercator(new geo.Point(data.longitude, data.latitude));
       addLocToMap(pt, otherSym, {id: data.id, nickname:data.nickname});
     }
     if (data.action === "close"){
@@ -25,8 +25,8 @@ function sendPosition() {
   socket.send(JSON.stringify({
       action: 'position',
       nickname: $("#nickname").val(),
-      lat: coords.latitude,
-      lng: coords.longitude
+      latitude: coords.latitude,
+      longitude: coords.longitude
       }));
 }
 function sendLocation(position){
