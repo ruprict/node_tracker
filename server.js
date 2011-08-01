@@ -1,5 +1,4 @@
 var sys = require('sys'),
-    static = require('node-static'),
     crypto = require('crypto'),
     express = require('express'),
     io = require('socket.io'),
@@ -9,7 +8,6 @@ var sys = require('sys'),
     clientModel = require('./javascripts/client'),
     connect = require('connect'),
     _u = require('underscore'),
-    clientFiles = new static.Server(),
     server;
 
 
@@ -31,7 +29,7 @@ function basic_auth(req,res, next) {
 
 server = express.createServer(
     connect.logger(),
-    //basic_auth,
+    basic_auth,
     express.cookieParser(),
     express.session({secret:"horseFart"}),
   connect.static(__dirname)
@@ -46,7 +44,7 @@ server.get('/clients', function(req,res){
 });
 
 
-server.listen(process.env.PORT || 8000);
+server.listen(process.env.C9_PORT || process.env.PORT || 8000);
 ws = io.listen(server);
 
 ws.sockets.on('connection', function(client){
@@ -66,9 +64,8 @@ ws.sockets.on('connection', function(client){
     doSend(client, currClient.toJson(), true);
   });
   client.on('disconnect', function(){
-    console.log("disconnecting");
+    var nick = JSON.parse(currClient.toJson()).nickname;
     clientManager.removeClientById(c_id);
-    var nick = JSON.parse(currClient.toJson())['nickname'];
     log("client " + nick + " disconnected");
     doSend(client,json({'id': c_id, 'action': 'close', 'nickname': nick}), true);
 
@@ -88,7 +85,7 @@ function sendExistingClients(client) {
       doSend(client,oldCli.toJson(), false);
     } else log('same id **');
   });
-};
+}
 
 function doSend(client, message, broadcast){
   try {
