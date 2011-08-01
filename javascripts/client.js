@@ -10,12 +10,13 @@ var Client = function(id,props){
 //public API
 Client.prototype = {
   sentClients: false,
-  update: function(message){
+  update: function(message, callback){
     for (var prop in message) {
       console.log("** updating prop " + prop);
       if (prop === "id") continue;
       this[prop] = message[prop];
     }
+    if (callback) callback(this);
   },
   setPosition: function(lat,lon) {
     this.latitude = lat;

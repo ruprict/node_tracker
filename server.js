@@ -42,7 +42,7 @@ server.get('/clients', function(req,res){
   _u.each(clientManager.getClients(), function(cli) {
     json.clients.push(JSON.parse(cli.toJson()));
   });
-  res.send(JSON.stringify(json));
+  res.send(json);
 });
 
 
@@ -52,18 +52,21 @@ ws = io.listen(server);
 ws.sockets.on('connection', function(client){
   var c_id = client.id,
       currClient = new clientModel.Client(c_id);
-  clientManager.addClient(currClient);
-  console.log("Connection made...");
+  clientManager.addClient(currClient, function(err, cli) {
+    log('** Client added');  
+  });
   client.on('message', function(message) {
     if (!currClient.sentClients){
-      sendExistingClients(client);
-      currClient.sentClients = true;
+      sendExistingClients(client, function(cli) {
+          currClient.sentClients = true;
+      });
     }
     log ("* message from " + c_id);
     log("* message = " + message);
     var request = JSON.parse(message.replace('<', '&lt;').replace('>', '&gt;'));
-    currClient.update(request);
-    doSend(client, currClient.toJson(), true);
+    currClient.update(request, function(){
+      doSend(client, currClient.toJson(), true);
+    });
   });
   client.on('disconnect', function(){
     console.log("disconnecting");
@@ -73,10 +76,9 @@ ws.sockets.on('connection', function(client){
     doSend(client,json({'id': c_id, 'action': 'close', 'nickname': nick}), true);
 
   });
-  log("Leaving connection code");
 
 });
-function sendExistingClients(client) {
+function sendExistingClients(client, callback) {
  console.log("New client, sending clients");
   var clis = clientManager.getClients();
   cli = 0;
@@ -88,6 +90,7 @@ function sendExistingClients(client) {
       doSend(client,oldCli.toJson(), false);
     } else log('same id **');
   });
+  callback(client);
 };
 
 function doSend(client, message, broadcast){
