@@ -11,6 +11,10 @@
 $(document).ready(function() {
 
   checkLoggedIn();
+  $("a[href='/logout']").live("click", function(){
+    console.log("sending disconnect");
+    socket.send(JSON.stringify({action:'logout', id:$("#user_id").html()}));
+  });
   
   /* Tabs Activiation
   ================================================== */

@@ -33,11 +33,9 @@ UserSchema.method("addLocation", function(loc){
     (lastLocation.longitude == loc.longitude) && 
     (loc.created_on - lastLocation.created_on < 3600000)) {
     
-    console.log("*** returning false");
     return false;
   }
   this.locations.push(loc);
-  console.log("*** returning true");
   return true;
 
 });
@@ -125,10 +123,7 @@ function parse_cookies(_cookies) {
 /// This isn't doing anything, but it could...
 ws.configure(function () {
   function auth (data, fn) {
-    console.dir(data);
     var cookies = parse_cookies(data.headers.cookie);
-    console.log("**** auth");
-    console.dir(cookies);        
     fn(null, true);
   };  
   ws.set('authorization', auth);
@@ -136,28 +131,40 @@ ws.configure(function () {
 
 ws.sockets.on('connection', function(client){
   sendExistingClients(client);
+  clientManager.addClient({c_id: client.id});
+  console.log("*** number of connected clients = " + clientManager.getClients().length);
   client.on('message', function(message) {
     log("* message = " + message);
     var request = JSON.parse(message.replace('<', '&lt;').replace('>', '&gt;'));
+    var currClient = clientManager.getClientByCId(client.id);
+    currClient.id = request.id;
+    currClient.latitude = request.latitude;
+    currClient.longitude = request.longitude;
+    currClient.nickname = request.nickname;
+    if (!request.latitude || !request.longitude || !request.nickname || !request.id) return;
     User.find({id:message.id}, function(err, users) {
-      var user = users[0], 
-          json ={id:user.id, latitude: request.latitude, longitude: request.longitude, nickname: request.nickname};
-      console.dir(user);
-      clientManager.addClient(json);
+      var user = users[0] ;
       if (user.addLocation({ latitude: request.latitude, longitude: request.longitude, created_on: new Date()})) {
         user.save(function(err, user) {
           if (err) console.dir(err);
           else console.log('location added');
         } );
       }
-      doSend(client, JSON.stringify(json), true);
+      currClient.action = "position";
+      console.log(JSON.stringify(currClient));
+      doSend(client, JSON.stringify(currClient), true);
     });
   });
   client.on('disconnect', function(){
-    if (!everyauth.loggedIn) return;
-    var nick = everyauth.user.first.name;
-    log("client " + nick + " disconnected");
-    doSend(client,json({'id': c_id, 'action': 'close', 'nickname': nick}), true);
+    console.log("***** disconnecting");
+    var cli = clientManager.removeClientByCId(client.id),
+        nick;
+    if (!cli) return; 
+    nick = cli.nickname;
+    
+    log("client " + nick+ " disconnected");
+    log("*** number of connected clients is " + clientManager.getClients().length);
+    doSend(client,json({'id': cli.id, 'action': 'close', 'nickname': nick}), true);
   });
 
 });
@@ -165,11 +172,9 @@ function sendExistingClients(client, callback) {
  console.log("New client, sending clients");
   var clis = clientManager.getClients();
   cli = 0;
-  console.log("*** Current number of clients connected is " + clis.length);
   _u.each(clis, function(oldCli){
     if (oldCli.id !== client.id) {
       log('Sending ' + oldCli.id);
-      console.dir(oldCli);
       oldCli.action = "position";
       doSend(client,JSON.stringify(oldCli), false);
     } else log('same id **');

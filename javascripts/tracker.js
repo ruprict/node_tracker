@@ -55,6 +55,7 @@ function removeUser(id) {
     map.graphics.remove(g[0]);
     map.graphics.remove(g[1]);
     $('#li_' + id).remove();
+    delete graphics[ id ];
   }
 }
 function addLocToMap(loc, symbol, attr){
