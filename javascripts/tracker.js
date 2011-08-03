@@ -113,6 +113,9 @@ dojo.addOnLoad(function(){
       }, 500);
     });
     dojo.connect(map, "onMouseMove", showCoordinates);
+
+    // If we have a user, map it
+    if ($("#user_id").length > 0 && $("#user_id").html() != '') getLocation();
   });
 
 

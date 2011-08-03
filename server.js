@@ -8,7 +8,6 @@ var sys = require('sys'),
     log = sys.puts,
     clientManager = require('./javascripts/clientManager'),
     clientModel = require('./javascripts/client'),
-    Client = mongoose.model('Client', clientModel.Client),
     Location = clientModel.Location,
     connect = require('connect'),
     _u = require('underscore'),
@@ -18,6 +17,30 @@ var sys = require('sys'),
 var UserSchema = new mongoose.Schema({
   locations: [Location]
 }), User;
+UserSchema.method("addLocation", function(loc){
+
+  var num = this.locations.length,
+      lastLocation = this.locations[num -1];
+
+  if (num === 0){
+    this.locations.push(loc);
+    return true;
+  } 
+
+  // If it's the same location and we are within the hour, don't add it
+ // FOr some reason, the types are not the same, so can't use === (should figgur dis out) 
+  if ((lastLocation.latitude == loc.latitude) && 
+    (lastLocation.longitude == loc.longitude) && 
+    (loc.created_on - lastLocation.created_on < 3600000)) {
+    
+    console.log("*** returning false");
+    return false;
+  }
+  this.locations.push(loc);
+  console.log("*** returning true");
+  return true;
+
+});
 UserSchema.plugin(mongooseAuth, {
   everymodule: {
     everyauth: {
@@ -45,21 +68,22 @@ UserSchema.plugin(mongooseAuth, {
       , registerLocals: {title: "Register"}
       , loginSuccessRedirect: '/'
       , registerSuccessRedirect: '/'
-      , respondToLoginSucceed: function(res, user) {
+      /*, respondToLoginSucceed: function(res, user) {
          if (user) {
             res.writeHead(303, {'Location': this.loginSuccessRedirect()});
             clientManager.addClient({id:user.id})
             res.end();
           }
-      }
+      }*/
     }
   }
 });
 
 
-User = mongoose.model('User', UserSchema);
 
+mongoose.model('User', UserSchema);
 mongoose.connect('mongodb://localhost/node_tracker_test'),
+User = mongoose.model('User');
 
 server = express.createServer(
     connect.logger(),
@@ -116,15 +140,17 @@ ws.sockets.on('connection', function(client){
     log("* message = " + message);
     var request = JSON.parse(message.replace('<', '&lt;').replace('>', '&gt;'));
     User.find({id:message.id}, function(err, users) {
-      console.dir(users); 
       var user = users[0], 
           json ={id:user.id, latitude: request.latitude, longitude: request.longitude, nickname: request.nickname};
+      console.dir(user);
       clientManager.addClient(json);
-      user.locations = user.locations || [];
-      user.locations.push({ latitude: request.latitude, longitude: request.longitude})
-      user.save( function(){
-        doSend(client, JSON.stringify(json), true);
-      });
+      if (user.addLocation({ latitude: request.latitude, longitude: request.longitude, created_on: new Date()})) {
+        user.save(function(err, user) {
+          if (err) console.dir(err);
+          else console.log('location added');
+        } );
+      }
+      doSend(client, JSON.stringify(json), true);
     });
   });
   client.on('disconnect', function(){
@@ -144,7 +170,7 @@ function sendExistingClients(client, callback) {
     if (oldCli.id !== client.id) {
       log('Sending ' + oldCli.id);
       console.dir(oldCli);
-      doSend(client,oldCli, false);
+      doSend(client,JSON.stringify(oldCli), false);
     } else log('same id **');
   });
   if (callback) callback(client);
@@ -165,3 +191,4 @@ function doSend(client, message, broadcast){
 }
 
 mongooseAuth.helpExpress(server);
+exports.User = User;

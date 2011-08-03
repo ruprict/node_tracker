@@ -9,33 +9,9 @@
 	
 
 $(document).ready(function() {
- 
-  $("form").submit(function(){
-    var inputs = $(this).find("input"),
-        email = $(inputs[0]), 
-        pass = $(inputs[1]);
 
-    if (email.val() === '' || pass.val() === ''){
-      alert('Please login');
-      return false;
-    }
-    $.ajax({
-      url: this.action,
-      type: this.method,
-      data: $(this).serialize(),
-      success: function (result) {
-        $("#login_area").html($(result).find("#login_area").html());
-        getLocation();
-        postLoginSetup();
-      }, 
-      error: function(result) {
-        $("#info").html("<strong style='color:red'>Error</strong>");       
-      }
-    });
-    return false;
-
-  });
-
+  checkLoggedIn();
+  
   /* Tabs Activiation
   ================================================== */
   var tabs = $('ul.tabs');
@@ -65,6 +41,44 @@ $(document).ready(function() {
   }); 
 	
 });
+function checkLoggedIn() {
+  var u_id = $("#user_id");
+  if ((u_id.length > 0) && u_id.html() !== '') {
+    postLoginSetup();
+    return;
+  }
+  $("#login_area form").submit(function(){
+    var inputs = $(this).find("input"),
+        email = $(inputs[0]), 
+        pass = $(inputs[1]);
+
+    if (email.val() === '' || pass.val() === ''){
+      alert('Please login');
+      return false;
+    }
+    $.ajax({
+      url: this.action,
+      type: this.method,
+      data: $(this).serialize(),
+      success: function (result) {
+        var res = $(result);
+        if (res.find("form").length > 0) { //Login failed 
+          $("#info").html("LOGIN FAILED");
+        } else {
+          $("#login_area").html(res.find("#login_area").html());
+          getLocation();
+          postLoginSetup();
+        }
+      }, 
+      error: function(result) {
+        $("#info").html("<strong style='color:red'>Error</strong>");       
+      }
+    });
+    return false;
+
+  });
+
+}
 function postLoginSetup() {   
   $("#showCrumbs").change(function(){
     if ($(this).attr("checked")) {
