@@ -1,0 +1,17 @@
+- if (!everyauth.loggedIn)
+  form(action='/login', method='POST')
+    #login
+      label(for=everyauth.password.loginFormFieldName) Login
+      input(type='text', name=everyauth.password.loginFormFieldName)
+    #password
+      label(for=everyauth.password.passwordFormFieldName) Password
+      input(type='password', name=everyauth.password.passwordFormFieldName)
+    #submit
+      input(type='submit') Login
+- else
+  div Welcome #{everyauth.user.name.first}
+  span Show my crumbs: 
+  input(type='checkbox', id="showCrumbs")
+  ul#crumbs 
+  a(href="/logout") Logout
+  span#user_id(style="display:none") #{everyauth.user.id}

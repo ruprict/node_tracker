@@ -7,7 +7,7 @@ var socket = io.connect(),
     otherSym= new esym.PictureMarkerSymbol('images/someone.png', 13, 24);
 socket.on('message', function(data){
     data = JSON.parse(data);
-    if (data.action === "position" && (data.nickname !== $("nickname").val())) {
+    if (data.action === "position" && (data.id !== $("user_id").val())) {
       var pt = geo.geographicToWebMercator(new geo.Point(data.longitude, data.latitude));
       addLocToMap(pt, otherSym, {id: data.id, nickname:data.nickname});
     }
@@ -21,23 +21,23 @@ socket.emit(JSON.stringify({
   text: "connected" 
   }));
 function sendPosition() {
+  if (!myPos) return;
   var coords = myPos.coords;
   socket.send(JSON.stringify({
       action: 'position',
-      nickname: $("#nickname").val(),
+      id: $("#user_id").html(),
+      nickname: $("#login_area").find("div").html().split(" ")[1],
       latitude: coords.latitude,
       longitude: coords.longitude
-      }));
+  }));
 }
 function sendLocation(position){
   myPos = position; 
   var coords = myPos.coords;
 
   myLoc = geo.geographicToWebMercator(new geo.Point(coords.longitude, coords.latitude), sym);
-  if ($('#nickname').val() !== ''){
-    sendPosition();
-    if(map.loaded ) addLocToMap(myLoc, sym, {id: "me", nickname:"Me"});
-  }
+  addLocToMap(myLoc, sym, {id:$("#user_id").val(), nickname: "Me"});
+  sendPosition();
 }
 function getLocation(){
   if (navigator.geolocation){
@@ -84,7 +84,6 @@ function addLocToMap(loc, symbol, attr){
     map.graphics.add(newg);
     map.graphics.add(txtg);
 }
-getLocation();
 function showCoordinates(evt) {
         //get mapPoint from event
         //The map is in web mercator - modify the map point to display the results in geographic
@@ -116,10 +115,6 @@ dojo.addOnLoad(function(){
     dojo.connect(map, "onMouseMove", showCoordinates);
   });
 
-$("#nickname").bind("change", function(){
-  addLocToMap(myLoc, sym, {id:"me", nickname:"Me"});
-  sendPosition();
-});
 
 $("#clients").click(function(e){
   var $this = $(this), nick

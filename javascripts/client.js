@@ -1,11 +1,17 @@
+var mongoose = require('mongoose'),
+    Schema = mongoose.Schema;
 
-var Client = function(id,props){
-    this._id = id;
-    this.latitude = null;
-    this.longitude = null;
-    this.update(props);
 
-};
+var Location = new Schema({
+  created_on  : {type: Date, default: Date.now},
+    latitude    : Number,
+    longitude   : Number
+});
+
+var Client = new Schema ({
+    name        : String,
+    locations   : [Location]
+});
 
 //public API
 Client.prototype = {
@@ -34,3 +40,4 @@ Client.prototype = {
 };
 
 exports.Client = Client;
+exports.Location = Location;

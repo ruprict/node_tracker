@@ -4,7 +4,7 @@ var _u = require('underscore');
   var _clients=[],
       _getClient = function(id) {
         return _u.detect(_clients, function(cli){
-          if (cli.getId() === id) return cli;
+          if (cli.id === id) return cli;
         });
       };
   return {
@@ -15,20 +15,20 @@ var _u = require('underscore');
       return _clients;            
     },
     addClient: function(cli) {
-      if(_clients.length>0) console.log("first id = "+  _clients[0].getId());
-      //if (!_getClient(cli.getId())) {
-        console.log("*** adding Client " + cli.getId());
+      if(_clients.length>0) console.log("first id = "+  _clients[0].id);
+      if (!_getClient(cli.id)) {
+        console.log("*** adding Client " + cli.id);
         console.dir(cli);
         _clients.push(cli);
         return;
-      //}
+      }
       //console.log("****CLIENT ALREADY ADDED");
     },
     removeClientById: function(id) {
       var cli = _getClient(id);
       if (cli) {
         _clients = _u.reject(_clients, function(c) {
-          return c.getId() === id;
+          return c.id === id;
         });
       }
       return cli;

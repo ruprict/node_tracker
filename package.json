@@ -6,7 +6,11 @@
     "node-static": "0.5.7",
     "express": "2.4.3",
     "connect": "1.6.0",
-    "underscore": "1.1.7"
+    "underscore": "1.1.7",
+    "mongoose": "1.7.4", 
+    "everyauth": "0.2.17",
+    "mongoose-auth": "0.0.11",
+    "jade": "0.13.0"
   }
 }
 
