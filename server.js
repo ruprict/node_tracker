@@ -170,6 +170,7 @@ function sendExistingClients(client, callback) {
     if (oldCli.id !== client.id) {
       log('Sending ' + oldCli.id);
       console.dir(oldCli);
+      oldCli.action = "position";
       doSend(client,JSON.stringify(oldCli), false);
     } else log('same id **');
   });

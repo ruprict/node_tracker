@@ -1,11 +1,14 @@
-var socket = io.connect(),
+var socket, 
     myLoc, myGraphic, myPos,
     graphics={},
     geo = esri.geometry,
     esym = esri.symbol,
     sym = new esym.PictureMarkerSymbol('images/me.png', 13, 24),
     otherSym= new esym.PictureMarkerSymbol('images/someone.png', 13, 24);
-socket.on('message', function(data){
+
+function setUpSocket() {
+  socket= io.connect();
+  socket.on('message', function(data){
     data = JSON.parse(data);
     if (data.action === "position" && (data.id !== $("user_id").val())) {
       var pt = geo.geographicToWebMercator(new geo.Point(data.longitude, data.latitude));
@@ -14,12 +17,14 @@ socket.on('message', function(data){
     if (data.action === "close"){
       removeUser(data.id);
     }
-  console.dir(data);
-});
-socket.emit(JSON.stringify({
-  action: 'speak',
-  text: "connected" 
-  }));
+    console.dir(data);
+  });
+  socket.emit(JSON.stringify({
+    action: 'speak',
+    text: "connected" 
+    }));
+
+}
 function sendPosition() {
   if (!myPos) return;
   var coords = myPos.coords;
@@ -116,6 +121,7 @@ dojo.addOnLoad(function(){
 
     // If we have a user, map it
     if ($("#user_id").length > 0 && $("#user_id").html() != '') getLocation();
+    setUpSocket();
   });
 
 
