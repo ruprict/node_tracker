@@ -102,17 +102,20 @@ function replay() {
   var lastg;
   $.getJSON("/crumbs",  function(result) {
     var num = result.length, cnt=0,
-        pt, curr;
+        pt, curr, currTimeout;
    function _addG() { 
       curr = result[cnt]; 
+	$("#info").html("Showing crumb " + cnt + " of " + num);
       if (lastg) map.graphics.remove(lastg);
       pt = geo.geographicToWebMercator(new geo.Point(curr.longitude, curr.latitude));
+      if (!map.extent.contains(pt)) map.centerAndZoom(pt, 16);
       lastg = new esri.Graphic(pt, crumbSym);
       map.graphics.add(lastg);
       cnt++;
-      if (cnt < num) setTimeout( _addG, 3000);
+      if (cnt < num) currTimeout = setTimeout( _addG, 1000); 
+      else setTimeout(function() {map.graphics.remove(lastg); $("#info").html("Done");}, 3000);
     }
-    setTimeout(_addG, 1000) ;
+    currTimeout = setTimeout(_addG, 1000) ;
       
   });
 
