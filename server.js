@@ -13,73 +13,43 @@ var sys = require('sys'),
     connect = require('connect'),
     _u = require('underscore'),
     express = require('express'),
-    server;
+    server, 
+    UserSchema = require('./lib/schema').UserSchema;
 
-var UserSchema = new mongoose.Schema({
-  locations: [Location]
-}), User;
-UserSchema.method("addLocation", function(loc){
-  console.log("** User.addLocation");
-  console.dir(this);
-  var num = this.locations.length,
-      lastLocation = this.locations[num -1];
-  console.log("** num = " + num);
-  if (num === 0){
-    console.log("adding location");
-    this.locations.push(loc);
-    return true;
-  } 
-
-  // If it's the same location and we are within the hour, don't add it
- // FOr some reason, the types are not the same, so can't use === (should figgur dis out) 
-  if ((lastLocation.latitude == loc.latitude) && 
-    (lastLocation.longitude == loc.longitude) && 
-    (loc.created_on - lastLocation.created_on < 3600000)) {
-    log("*** returning false"); 
-    return false;
-  }
-  this.locations.push(loc);
-  return true;
-
-});
 UserSchema.plugin(mongooseAuth, {
   everymodule: {
     everyauth: {
       User: function() {
-        return User;      
-      }           
-    }            
-  }
-  , password: { 
-      loginWith: "email"
-    , extraParams: {
-      name: {
-                first: String
-              , last: String
-            }
+        return User;
       }
-    , everyauth: {
-        getLoginPath: '/login' 
-      , postLoginPath: '/login'
-      , loginView: 'partials/login.jade'
-      , loginLocals: {title: "Login"}
-      , getRegisterPath: '/register'
-      , postRegisterPath: '/register'
-      , registerView: 'register.jade'
-      , registerLocals: {title: "Register"}
-      , loginSuccessRedirect: '/'
-      , registerSuccessRedirect: '/'
-      /*, respondToLoginSucceed: function(res, user) {
-         if (user) {
-            res.writeHead(303, {'Location': this.loginSuccessRedirect()});
-            clientManager.addClient({id:user.id})
-            res.end();
-          }
-      }*/
+    }
+  },
+  password: {
+    loginWith: "email",
+    extraParams: {
+      name: {
+        first: String,
+        last: String
+      }
+    },
+    everyauth: {
+      getLoginPath: '/login',
+      postLoginPath: '/login',
+      loginView: 'partials/login.jade',
+      loginLocals: {
+        title: "Login"
+      },
+      getRegisterPath: '/register',
+      postRegisterPath: '/register',
+      registerView: 'register.jade',
+      registerLocals: {
+        title: "Register"
+      },
+      loginSuccessRedirect: '/',
+      registerSuccessRedirect: '/'
     }
   }
 });
-
 
 
 mongoose.model('User', UserSchema);
