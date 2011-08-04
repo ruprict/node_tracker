@@ -1,10 +1,12 @@
-var socket, 
+var socket, map, 
     myLoc, myGraphic, myPos,
     graphics={},
     geo = esri.geometry,
     esym = esri.symbol,
     sym = new esym.PictureMarkerSymbol('images/me.png', 13, 24),
-    otherSym= new esym.PictureMarkerSymbol('images/someone.png', 13, 24);
+    otherSym= new esym.PictureMarkerSymbol('images/someone.png', 13, 24),
+    crumbSym= new esym.PictureMarkerSymbol('images/crumb.png', 13, 24);
+
 
 function setUpSocket() {
   socket= io.connect();
@@ -99,7 +101,6 @@ function showCoordinates(evt) {
         dojo.byId("info").innerHTML = mp.x + ", " + mp.y;
       }
 
-var map;
 dojo.addOnLoad(function(){
      
   var initExtent = new esri.geometry.Extent({"xmin":-15122738.766504481 ,"ymin":2519982.865068336,"xmax":-3342875.463422532,"ymax":6433558.7132683,"spatialReference":{"wkid":102100}});

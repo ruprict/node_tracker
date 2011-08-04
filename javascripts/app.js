@@ -84,6 +84,8 @@ function checkLoggedIn() {
 
 }
 function postLoginSetup() {   
+  $("#replay").click(replay);
+  return;
   $("#showCrumbs").change(function(){
     if ($(this).attr("checked")) {
       $.getJSON("/crumbs",  function(result) {
@@ -96,4 +98,23 @@ function postLoginSetup() {
     }
   });
 }
+function replay() {
+  var lastg;
+  $.getJSON("/crumbs",  function(result) {
+    var num = result.length, cnt=0,
+        pt, curr;
+   function _addG() { 
+      curr = result[cnt]; 
+      if (lastg) map.graphics.remove(lastg);
+      pt = geo.geographicToWebMercator(new geo.Point(curr.longitude, curr.latitude));
+      lastg = new esri.Graphic(pt, crumbSym);
+      map.graphics.add(lastg);
+      cnt++;
+      if (cnt < num) setTimeout( _addG, 3000);
+    }
+    setTimeout(_addG, 1000) ;
+      
+  });
 
+
+}

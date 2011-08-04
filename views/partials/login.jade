@@ -10,8 +10,6 @@
       input(type='submit') Login
 - else
   div Welcome #{everyauth.user.name.first}
-  span Show my crumbs: 
-  input(type='checkbox', id="showCrumbs")
-  ul#crumbs 
+  button#replay Replay my crumbs 
   a(href="/logout") Logout
   span#user_id(style="display:none") #{everyauth.user.id}

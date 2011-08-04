@@ -32,7 +32,6 @@ var _u = require('underscore');
         _clients.push(cli);
         return;
       }
-      //console.log("****CLIENT ALREADY ADDED");
     },
     removeClientById: function(id) {
       var cli = _getClient(id);
