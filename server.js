@@ -6,9 +6,9 @@ var sys = require('sys'),
     io = require('socket.io'),
     json = JSON.stringify,
     log = sys.puts,
-    ClientManager = require('./javascripts/clientManager').ClientManager,
+    ClientManager = require('./lib/clientManager').ClientManager,
     clientManager = ClientManager.get(),
-    clientModel = require('./javascripts/client'),
+    clientModel = require('./lib/client'),
     Location = clientModel.Location,
     connect = require('connect'),
     _u = require('underscore'),
@@ -88,11 +88,11 @@ User = mongoose.model('User');
 
 server = express.createServer(
     connect.logger(),
+    express.compiler({src:__dirname+"/public", dest:__dirname + "/public", enable: ['coffeescript']}),
     express.cookieParser(),
     express.bodyParser(),
     express.session({secret:"horseFart"}),
-    express.compiler({src:__dirname+"/coffee", dest:__dirname + "/javascripts", enable: ['coffeescript']}),
-    connect.static(__dirname),
+    express.static(__dirname + "/public"),
     mongooseAuth.middleware()
 );
 server.set('view engine', 'jade');
