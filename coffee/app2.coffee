@@ -50,6 +50,7 @@ postLoginSetup = ->
 
 replay = ->
   info = $("#info")
+  lastg = null
   $.getJSON "/crumbs", (result) ->
     num = result.length
     cnt = 0

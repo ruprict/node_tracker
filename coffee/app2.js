@@ -55,14 +55,15 @@ postLoginSetup = function() {
   return $("#replay").click(replay);
 };
 replay = function() {
-  var info;
+  var info, lastg;
   info = $("#info");
+  lastg = null;
   return $.getJSON("/crumbs", function(result) {
     var cnt, currTimeout, num, _addG;
     num = result.length;
     cnt = 0;
     _addG = function() {
-      var curr, currTimeout, lastg, pt;
+      var curr, currTimeout, pt;
       curr = result[cnt];
       info.html("Showing crumb " + (cnt + 1) + " of " + num);
       if (lastg) {
