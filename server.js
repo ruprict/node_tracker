@@ -6,7 +6,8 @@ var sys = require('sys'),
     io = require('socket.io'),
     json = JSON.stringify,
     log = sys.puts,
-    clientManager = require('./javascripts/clientManager'),
+    ClientManager = require('./javascripts/clientManager').ClientManager,
+    clientManager = ClientManager.get(),
     clientModel = require('./javascripts/client'),
     Location = clientModel.Location,
     connect = require('connect'),
@@ -18,11 +19,13 @@ var UserSchema = new mongoose.Schema({
   locations: [Location]
 }), User;
 UserSchema.method("addLocation", function(loc){
-
+  console.log("** User.addLocation");
+  console.dir(this);
   var num = this.locations.length,
       lastLocation = this.locations[num -1];
-
+  console.log("** num = " + num);
   if (num === 0){
+    console.log("adding location");
     this.locations.push(loc);
     return true;
   } 
@@ -32,7 +35,7 @@ UserSchema.method("addLocation", function(loc){
   if ((lastLocation.latitude == loc.latitude) && 
     (lastLocation.longitude == loc.longitude) && 
     (loc.created_on - lastLocation.created_on < 3600000)) {
-    
+    log("*** returning false"); 
     return false;
   }
   this.locations.push(loc);
@@ -88,6 +91,7 @@ server = express.createServer(
     express.cookieParser(),
     express.bodyParser(),
     express.session({secret:"horseFart"}),
+    express.compiler({src:__dirname+"/coffee", dest:__dirname + "/javascripts", enable: ['coffeescript']}),
     connect.static(__dirname),
     mongooseAuth.middleware()
 );
@@ -142,8 +146,8 @@ ws.sockets.on('connection', function(client){
     currClient.longitude = request.longitude;
     currClient.nickname = request.nickname;
     if (!request.latitude || !request.longitude || !request.nickname || !request.id) return;
-    User.find({id:message.id}, function(err, users) {
-      var user = users[0] ;
+    User.findById(request.id, function(err, user) {
+      console.log("*** found user");
       if (user.addLocation({ latitude: request.latitude, longitude: request.longitude, created_on: new Date()})) {
         user.save(function(err, user) {
           if (err) console.dir(err);
