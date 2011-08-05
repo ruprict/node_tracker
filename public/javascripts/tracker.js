@@ -5,19 +5,22 @@ var socket, map,
     esym = esri.symbol,
     sym = new esym.PictureMarkerSymbol('images/me.png', 13, 24),
     otherSym= new esym.PictureMarkerSymbol('images/someone.png', 13, 24),
-    crumbSym= new esym.PictureMarkerSymbol('images/crumb.png', 13, 24);
+    crumbSym= new esym.PictureMarkerSymbol('images/crumb.png', 13, 24),
+    currentWatch = -1, following = null;
 
 
 function setUpSocket() {
   socket= io.connect();
   socket.on('message', function(data){
+    var pt;
     data = JSON.parse(data);
-    if (data.action === "position" && (data.id !== $("user_id").val())) {
-      var pt = geo.geographicToWebMercator(new geo.Point(data.longitude, data.latitude));
-      addLocToMap(pt, otherSym, {id: data.id, nickname:data.nickname});
-    }
-    if (data.action === "close"){
-      removeUser(data.id);
+    switch (data.action) {
+      case "position":
+        checkMessage(data);
+        break;
+      case "close":
+        removeUser(data.id);
+        break; 
     }
     console.dir(data);
   });
@@ -25,8 +28,16 @@ function setUpSocket() {
     action: 'speak',
     text: "connected" 
     }));
-
 }
+
+function checkMessage(data) {
+    pt = geo.geographicToWebMercator(new geo.Point(data.longitude, data.latitude));
+    addLocToMap(pt, otherSym, {id: data.id, nickname:data.nickname});
+    if (following === data.id) {
+      map.centerAt(pt);
+    }
+}
+
 function sendPosition() {
   if (!myPos) return;
   var coords = myPos.coords;
@@ -43,16 +54,16 @@ function sendLocation(position){
   var coords = myPos.coords;
 
   myLoc = geo.geographicToWebMercator(new geo.Point(coords.longitude, coords.latitude), sym);
-  addLocToMap(myLoc, sym, {id:$("#user_id").val(), nickname: "Me"});
+  addLocToMap(myLoc, sym, {id:$("#user_id").html(), nickname: "Me"});
   sendPosition();
 }
 function getLocation(){
   if (navigator.geolocation){
-    navigator.geolocation.watchPosition(
+    currentWatch = navigator.geolocation.watchPosition(
         sendLocation,
         locationError,
         {
-          enableHighAccuracy: true,
+          enableHighAccuracy: false, //This makes about double the calls when true
           timeout: 10000, //10 seconds 
           maximumAge: 600000 //10 minutes
         });
@@ -71,7 +82,7 @@ function removeUser(id) {
   }
 }
 function addLocToMap(loc, symbol, attr){
-  var newg, txtg, g, txtsym,
+  var newg, txtg, g, txtsym, a, cbox, lbl
       g = graphics[attr.id];
   if (g) {
     map.graphics.remove(g[0]);
@@ -86,9 +97,20 @@ function addLocToMap(loc, symbol, attr){
         id: "goto_" + attr.id,
         text: attr.nickname
       });
+    a.appendTo(li);
+    lbl = $("<span>", {
+      "for": "follow_" + attr.id,
+      style: 'margin-left: 10px',
+      text: "Follow"
+    });
+    cbox = $('<input>', {
+      id: "follow_" + attr.id,
+      type: "checkbox"
+    });
+    lbl.appendTo(li);
+    cbox.appendTo(li);
     li.appendTo($('#clients'));
     
-    a.appendTo(li);
   }
   //Added three graphics per person, one for name, one for name background.
   // ArcGIS jsapi needs to handle this
@@ -136,18 +158,22 @@ dojo.addOnLoad(function(){
     setUpSocket();
   });
 
-
-$("#clients").click(function(e){
-  var $this = $(this), nick
-    target = e.target;
-  if (!$(target).is("a")) return false;
-  nick = target.id.split("_")[1];
-  $.each(map.graphics.graphics, function(idx, gr){
-    if (gr.attributes && gr.attributes.id === nick){
-      map.centerAndZoom(gr.geometry, 16);
+  $("#clients").click(function(e){
+    var $this = $(this), nick
+      target = $(e.target);
+    nick = target.attr("id").split("_")[1];
+    if (target.is("a")) {
+      $.each(map.graphics.graphics, function(idx, gr){
+        if (gr.attributes && gr.attributes.id === nick){
+          map.centerAndZoom(gr.geometry, 16);
+        }
+      });
+    } else if (target.is("input")) {
+      if (target.is(":checked")){
+        following = nick; 
+      } else following = null;
     }
+     
   });
-   
-});
 });
 
