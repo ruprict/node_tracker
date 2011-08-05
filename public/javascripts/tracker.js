@@ -84,6 +84,7 @@ function removeUser(id) {
 function addLocToMap(loc, symbol, attr){
   var newg, txtg, g, txtsym, a, cbox, lbl
       g = graphics[attr.id];
+  if (attr.id === undefined) return;
   if (g) {
     map.graphics.remove(g[0]);
     map.graphics.remove(g[1]);
