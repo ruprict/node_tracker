@@ -1,16 +1,9 @@
 _u = require 'underscore'
 
 class ClientManager
-  instance = null
-   
-  @get: ->
-    if not instance?
-      instance = new @
-      instance.init()
-    instance
+  @get: -> @instance ?= new @
 
-  init: -> 
-    @clients = []
+  constructor: -> @clients = []
 
   getClientById: (id) ->
     _u.detect @clients, (cli) ->

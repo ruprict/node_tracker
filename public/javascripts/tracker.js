@@ -48,8 +48,18 @@ function sendLocation(position){
 }
 function getLocation(){
   if (navigator.geolocation){
-    navigator.geolocation.watchPosition(sendLocation);
+    navigator.geolocation.watchPosition(
+        sendLocation,
+        locationError,
+        {
+          enableHighAccuracy: true,
+          timeout: 10000, //10 seconds 
+          maximumAge: 600000 //10 minutes
+        });
   }
+}
+function locationError(error) {
+  $("#info").html("** Error getting position: " + error.message);
 }
 function removeUser(id) {
   var g = graphics[id];
