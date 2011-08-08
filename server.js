@@ -64,7 +64,7 @@ ws.sockets.on('connection', function(client){
   clientManager.addClient({c_id: client.id});
   console.log("*** number of connected clients = " + clientManager.getClients().length);
   client.on('message', function(message) {
-    log("* message = " + message);
+    console.log("* message = " + message);
     var request = JSON.parse(message.replace('<', '&lt;').replace('>', '&gt;'));
     var currClient = clientManager.getClientByCId(client.id);
     currClient.id = request.id;
@@ -92,8 +92,8 @@ ws.sockets.on('connection', function(client){
     if (!cli) return; 
     nick = cli.nickname;
     
-    log("client " + nick+ " disconnected");
-    log("*** number of connected clients is " + clientManager.getClients().length);
+    console.log("client " + nick+ " disconnected");
+    console.log("*** number of connected clients is " + clientManager.getClients().length);
     doSend(client,JSON.stringify({'id': cli.id, 'action': 'close', 'nickname': nick}), true);
   });
 
@@ -104,10 +104,10 @@ function sendExistingClients(client, callback) {
   cli = 0;
   _u.each(clis, function(oldCli){
     if (oldCli.id !== client.id) {
-      log('Sending ' + oldCli.id);
+      console.log('Sending ' + oldCli.id);
       oldCli.action = "position";
       doSend(client,JSON.stringify(oldCli), false);
-    } else log('same id **');
+    } else console.log('same id **');
   });
   if (callback) callback(client);
 }
