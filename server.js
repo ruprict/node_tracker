@@ -22,6 +22,7 @@ server = express.createServer(
     mongooseAuth.middleware()
 );
 server.set('view engine', 'jade');
+server.set('views', __dirname + '/views');
 server.get('/', function(req, res) {
   res.render('index', { title: "Tracker"});
 });
