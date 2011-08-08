@@ -11,7 +11,8 @@
     "everyauth": "0.2.17",
     "mongoose-auth": "0.0.11",
     "jade": "0.13.0",
-    "coffee-script": "1.1.1"
+    "coffee-script": "1.1.1",
+    "date-util": "https://github.com/ruprict/node-date-utils/tarball/add_get_minutes_between"
   }
 }
 

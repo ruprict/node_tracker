@@ -1,60 +1,16 @@
-var sys = require('sys'),
-    mongoose = require("mongoose"),
+var mongoose = require("mongoose"),
     mongooseAuth = require('mongoose-auth'),
-    crypto = require('crypto'),
     everyauth = require('everyauth'),
     io = require('socket.io'),
-    json = JSON.stringify,
-    log = sys.puts,
     ClientManager = require('./lib/clientManager').ClientManager,
     clientManager = ClientManager.get(),
-    clientModel = require('./lib/client'),
-    Location = clientModel.Location,
     connect = require('connect'),
     _u = require('underscore'),
     express = require('express'),
     server, 
-    UserSchema = require('./lib/schema').UserSchema;
+    User = require('./lib/user').User;
 
-UserSchema.plugin(mongooseAuth, {
-  everymodule: {
-    everyauth: {
-      User: function() {
-        return User;
-      }
-    }
-  },
-  password: {
-    loginWith: "email",
-    extraParams: {
-      name: {
-        first: String,
-        last: String
-      }
-    },
-    everyauth: {
-      getLoginPath: '/login',
-      postLoginPath: '/login',
-      loginView: 'partials/login.jade',
-      loginLocals: {
-        title: "Login"
-      },
-      getRegisterPath: '/register',
-      postRegisterPath: '/register',
-      registerView: 'register.jade',
-      registerLocals: {
-        title: "Register"
-      },
-      loginSuccessRedirect: '/',
-      registerSuccessRedirect: '/'
-    }
-  }
-});
-
-
-mongoose.model('User', UserSchema);
 mongoose.connect('mongodb://localhost/node_tracker_test'),
-User = mongoose.model('User');
 
 server = express.createServer(
     connect.logger(),
@@ -138,7 +94,7 @@ ws.sockets.on('connection', function(client){
     
     log("client " + nick+ " disconnected");
     log("*** number of connected clients is " + clientManager.getClients().length);
-    doSend(client,json({'id': cli.id, 'action': 'close', 'nickname': nick}), true);
+    doSend(client,JSON.stringify({'id': cli.id, 'action': 'close', 'nickname': nick}), true);
   });
 
 });
