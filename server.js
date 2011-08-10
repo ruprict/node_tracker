@@ -128,4 +128,3 @@ function doSend(client, message, broadcast){
 }
 
 mongooseAuth.helpExpress(server);
-exports.User = User;
